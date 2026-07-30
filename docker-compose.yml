@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/dealsentry.db:/app/dealsentry.db
+    environment:
+      - DATABASE_URL=sqlite:///./dealsentry.db
+      - SCRAPE_DELAY_SECONDS=2
+      - CACHE_TTL_HOURS=4
+    command: >
+      sh -c "python seed_data.py && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - WDS_SOCKET_PORT=0
+    depends_on:
+      - backend
